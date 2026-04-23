@@ -21,20 +21,13 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 #tap-gate { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; background:#000; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 #tap-gate p { font-family:'Cinzel',serif; font-size:clamp(13px,3vw,18px); letter-spacing:.45em; color:rgba(255,255,255,.55); text-transform:uppercase; pointer-events:none; animation:tapPulse 2s ease-in-out infinite; }
 @keyframes tapPulse { 0%,100%{opacity:.4} 50%{opacity:1} }
-/* Tyler message card — shown over frozen Black.MOV after it ends */
-#tyler-msg {
-  position:fixed; inset:0; z-index:10;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; padding:32px 28px;
-  pointer-events:none; opacity:0; transition:opacity 1.4s ease;
-}
+#tyler-msg { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 28px; pointer-events:none; opacity:0; transition:opacity 1.4s ease; }
 #tyler-msg.visible { opacity:1; }
-#tyler-msg.gone    { opacity:0; transition:opacity 1.2s ease; pointer-events:none; }
+#tyler-msg.gone { opacity:0; transition:opacity 1.2s ease; pointer-events:none; }
 .tm-from { font-family:'Cinzel',serif; font-size:clamp(10px,2vw,13px); letter-spacing:.6em; color:rgba(255,255,255,.6); text-transform:uppercase; margin-bottom:18px; }
 .tm-body { font-family:'Cinzel',serif; font-size:clamp(15px,3.2vw,22px); color:rgba(255,255,255,.92); letter-spacing:.08em; line-height:2.0; text-shadow:0 2px 30px rgba(0,0,0,1),0 0 60px rgba(0,0,0,.8); max-width:520px; }
 .tm-body em { font-style:normal; color:#fff; font-weight:700; }
 .tm-sig { font-family:'Cinzel Decorative',serif; font-size:clamp(13px,2.8vw,20px); font-weight:700; color:#fff; letter-spacing:.12em; margin-top:22px; text-shadow:0 2px 20px rgba(0,0,0,1); }
-/* Final overlay */
 #overlay { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 20px; pointer-events:none; opacity:0; transition:opacity 1.6s ease; }
 #overlay.visible { opacity:1; pointer-events:auto; }
 #overlay.visible .ov-pre { animation:rise .9s .1s ease forwards; }
@@ -61,9 +54,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 </style>
 </head>
 <body>
-
 <div id="tap-gate"><p>Tap to Begin</p></div>
-
 <div id="vid-wrap">
   <video id="bg-video" muted playsinline preload="auto">
     <source src="Black.MOV" type="video/quicktime">
@@ -71,22 +62,20 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
   <video id="bg-video2" muted playsinline preload="auto">
     <source src="Flower.MOV" type="video/quicktime">
   </video>
-  <audio id="bg-audio" preload="auto">
-    <source src="Dark%20Fantasy%20Tiktok%20Song%20(slowed%20%20reverb)%20Yamaha%20-%20Dorian%20concept.mp3" type="audio/mpeg">
-  </audio>
-  <audio id="bg-audio2" preload="auto">
-    <source src="A%20Walk%20Along%20the%20Gates.mp3" type="audio/mpeg">
-  </audio>
   <div id="mk-top"></div>
   <div id="mk-bottom"></div>
   <div id="mk-left"></div>
   <div id="mk-right"></div>
 </div>
-
+<!-- Both audios outside vid-wrap, unlocked together on first tap -->
+<audio id="bg-audio" preload="auto">
+  <source src="Dark%20Fantasy%20Tiktok%20Song%20(slowed%20%20reverb)%20Yamaha%20-%20Dorian%20concept.mp3" type="audio/mpeg">
+</audio>
+<audio id="bg-audio2" preload="auto">
+  <source src="A%20Walk%20Along%20the%20Gates.mp3" type="audio/mpeg">
+</audio>
 <div id="grain"></div>
 <div id="vig"></div>
-
-<!-- Tyler message: fades in over frozen Black.MOV after it ends -->
 <div id="tyler-msg">
   <p class="tm-from">A message from Tyler</p>
   <p class="tm-body">
@@ -97,8 +86,6 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
   </p>
   <span class="tm-sig">— Tyler</span>
 </div>
-
-<!-- Final ask overlay shown after Flower.MOV ends -->
 <div id="overlay">
   <div class="ov-inner">
     <p class="ov-pre">A message from beyond</p>
@@ -119,20 +106,15 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
     <span class="btn-note">Tap to reply</span>
   </div>
 </div>
-
 <script>
-  /* CHANGE THESE 3 FOR EACH PERSON */
   var PERSON_NAME   = "ALYSSA HARGROVE";
   var HOST_NAME     = "JULIE";
   var POSITION_NAME = "BRIDESMAID";
-
   var TYLER_PHONE = "17706088227";
   var JULIE_PHONE = "16232174811";
-
   document.getElementById('el-name').textContent     = PERSON_NAME;
   document.getElementById('el-host').textContent     = HOST_NAME;
   document.getElementById('el-position').textContent = POSITION_NAME;
-
   var phone   = HOST_NAME.trim().toUpperCase() === "JULIE" ? JULIE_PHONE : TYLER_PHONE;
   var smsBody = encodeURIComponent(PERSON_NAME + " accepted! They are in as your " + POSITION_NAME + ".");
   document.getElementById('accept-btn').href = 'sms:+' + phone + '&body=' + smsBody;
@@ -146,34 +128,37 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
   var overlay   = document.getElementById('overlay');
   var acceptBtn = document.getElementById('accept-btn');
 
-  /* Step 1: tap gate — play Black.MOV + Dark Fantasy */
+  /* On tap: unlock BOTH audio elements inside the user gesture.
+     audio2 is paused immediately — iOS still unlocks it for later .play() calls. */
   function startExperience() {
+    /* Start vid1 + audio1 */
     audio1.currentTime = 10;
-    var vPlay = vid1.play();
-    var aPlay = audio1.play();
-    if (vPlay) vPlay.catch(function(){});
-    if (aPlay) aPlay.catch(function(){});
+    vid1.play().catch(function(){});
+    audio1.play().catch(function(){});
+    /* Unlock audio2 for later use — play then immediately pause */
+    audio2.currentTime = 10;
+    audio2.play().then(function() { audio2.pause(); audio2.currentTime = 10; }).catch(function(){});
     gate.style.display = 'none';
   }
   gate.addEventListener('click',      startExperience, { once: true });
   gate.addEventListener('touchstart', startExperience, { once: true, passive: true });
 
-  /* Step 2: Black.MOV ends — freeze frame, fade in Tyler message */
+  /* Black.MOV ends: freeze, show Tyler message for 8 seconds then transition */
   vid1.addEventListener('ended', function() {
     vid1.currentTime = vid1.duration;
     vid1.pause();
-    /* Fade in Tyler message over frozen Black.MOV */
     tylerMsg.classList.add('visible');
-    /* After 4 seconds of reading, fade out message and crossfade to Flower.MOV */
     setTimeout(function() {
+      /* Fade out Tyler message */
       tylerMsg.classList.add('gone');
-      /* Start Flower.MOV + Walk Along the Gates */
+      /* Start Flower.MOV */
       vid2.play().catch(function(){});
+      /* Resume audio2 (already unlocked) and fade in */
       audio2.currentTime = 10;
       audio2.play().catch(function(){});
-      /* Fade in vid2 over vid1 */
+      /* Crossfade vid2 in */
       setTimeout(function() { vid2.style.opacity = '1'; }, 100);
-      /* Fade out Dark Fantasy over 1.8s */
+      /* Fade out audio1 over 1.8s */
       var fadeStart = Date.now();
       var fadeDur   = 1800;
       var fadeInt   = setInterval(function() {
@@ -182,24 +167,22 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
         audio1.volume = vol;
         if (vol <= 0) { clearInterval(fadeInt); audio1.pause(); }
       }, 50);
-    }, 4000);
+    }, 8000);
   });
 
-  /* Step 3: Flower.MOV ends — freeze, show final overlay */
+  /* Flower.MOV ends: freeze, show final overlay */
   vid2.addEventListener('ended', function() {
     vid2.currentTime = vid2.duration;
     vid2.pause();
     overlay.classList.add('visible');
   });
 
-  /* Accept: stop audio2, SMS opens naturally */
+  /* Accept: stop audio2 */
   acceptBtn.addEventListener('click', function() {
-    audio2.pause();
-    audio2.currentTime = 0;
+    audio2.pause(); audio2.currentTime = 0;
   });
   acceptBtn.addEventListener('touchstart', function() {
-    audio2.pause();
-    audio2.currentTime = 0;
+    audio2.pause(); audio2.currentTime = 0;
   }, { passive: true });
 </script>
 </body>
