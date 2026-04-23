@@ -9,7 +9,8 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:100%; height:100%; overflow:hidden; background:#000; font-family:'Cinzel', serif; }
 #vid-wrap { position:fixed; inset:0; z-index:0; }
-#bg-video { width:100%; height:100%; object-fit:cover; object-position:center center; }
+#bg-video, #bg-video2 { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center center; }
+#bg-video2 { opacity:0; transition:opacity 1.8s ease; }
 #mk-top { position:absolute; top:0; left:0; right:0; height:10%; background:linear-gradient(to bottom,#000 30%,transparent); z-index:1; }
 #mk-bottom { position:absolute; bottom:0; left:0; right:0; height:14%; background:linear-gradient(to top, #000 30%,transparent); z-index:1; }
 #mk-left { position:absolute; top:0; left:0; bottom:0; width:6%; background:linear-gradient(to right, #000 20%,transparent); z-index:1; }
@@ -20,6 +21,15 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 #tap-gate { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; background:#000; cursor:pointer; -webkit-tap-highlight-color:transparent; }
 #tap-gate p { font-family:'Cinzel',serif; font-size:clamp(13px,3vw,18px); letter-spacing:.45em; color:rgba(255,255,255,.55); text-transform:uppercase; pointer-events:none; animation:tapPulse 2s ease-in-out infinite; }
 @keyframes tapPulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+/* Tyler's message card — shown over first video */
+#tyler-msg { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 28px; pointer-events:none; opacity:0; transition:opacity 1.4s ease; }
+#tyler-msg.visible { opacity:1; }
+#tyler-msg.hidden  { opacity:0; transition:opacity 1.2s ease; }
+.tm-from { font-family:'Cinzel',serif; font-size:clamp(10px,2vw,13px); letter-spacing:.6em; color:rgba(255,255,255,.6); text-transform:uppercase; margin-bottom:18px; }
+.tm-body { font-family:'Cinzel',serif; font-size:clamp(15px,3.2vw,22px); color:rgba(255,255,255,.92); letter-spacing:.08em; line-height:2.0; text-shadow:0 2px 30px rgba(0,0,0,1),0 0 60px rgba(0,0,0,.8); max-width:520px; }
+.tm-body em { font-style:normal; color:#fff; font-weight:700; }
+.tm-sig { font-family:'Cinzel Decorative',serif; font-size:clamp(13px,2.8vw,20px); font-weight:700; color:#fff; letter-spacing:.12em; margin-top:22px; text-shadow:0 2px 20px rgba(0,0,0,1); }
+/* Final overlay */
 #overlay { position:fixed; inset:0; z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 20px; pointer-events:none; opacity:0; transition:opacity 1.6s ease; }
 #overlay.visible { opacity:1; pointer-events:auto; }
 #overlay.visible .ov-pre { animation:rise .9s .1s ease forwards; }
@@ -46,21 +56,48 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
 </style>
 </head>
 <body>
+
 <div id="tap-gate"><p>Tap to Begin</p></div>
+
 <div id="vid-wrap">
+  <!-- Video 1: Black.MOV — Tyler's message -->
   <video id="bg-video" muted playsinline preload="auto">
+    <source src="Black.MOV" type="video/quicktime">
+  </video>
+  <!-- Video 2: Flower.MOV — Julie's ask -->
+  <video id="bg-video2" muted playsinline preload="auto">
     <source src="Flower.MOV" type="video/quicktime">
   </video>
+  <!-- Audio 1: Dark Fantasy — plays during Black.MOV -->
   <audio id="bg-audio" preload="auto">
-    <source src="A Walk Along the Gates.mp3" type="audio/mpeg">
+    <source src="Dark%20Fantasy%20Tiktok%20Song%20(slowed%20%20reverb)%20Yamaha%20-%20Dorian%20concept.mp3" type="audio/mpeg">
+  </audio>
+  <!-- Audio 2: Walk Along the Gates — plays during Flower.MOV -->
+  <audio id="bg-audio2" preload="auto">
+    <source src="A%20Walk%20Along%20the%20Gates.mp3" type="audio/mpeg">
   </audio>
   <div id="mk-top"></div>
   <div id="mk-bottom"></div>
   <div id="mk-left"></div>
   <div id="mk-right"></div>
 </div>
+
 <div id="grain"></div>
 <div id="vig"></div>
+
+<!-- Tyler's personal message shown over Black.MOV -->
+<div id="tyler-msg">
+  <p class="tm-from">A message from Tyler</p>
+  <p class="tm-body">
+    You've been there from the very beginning —<br>
+    through every chapter, every moment.<br>
+    You're not just important to me...<br>
+    <em>you're family.</em>
+  </p>
+  <span class="tm-sig">— Tyler</span>
+</div>
+
+<!-- Final ask overlay shown after Flower.MOV ends -->
 <div id="overlay">
   <div class="ov-inner">
     <p class="ov-pre">A message from beyond</p>
@@ -81,6 +118,7 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
     <span class="btn-note">Tap to reply</span>
   </div>
 </div>
+
 <script>
   /* CHANGE THESE 3 FOR EACH PERSON */
   var PERSON_NAME   = "ALYSSA HARGROVE";
@@ -94,41 +132,76 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; font-fam
   document.getElementById('el-host').textContent     = HOST_NAME;
   document.getElementById('el-position').textContent = POSITION_NAME;
 
-  var phone    = HOST_NAME.trim().toUpperCase() === "JULIE" ? JULIE_PHONE : TYLER_PHONE;
-  var smsBody  = encodeURIComponent(PERSON_NAME + " accepted! They are in as your " + POSITION_NAME + ".");
+  var phone   = HOST_NAME.trim().toUpperCase() === "JULIE" ? JULIE_PHONE : TYLER_PHONE;
+  var smsBody = encodeURIComponent(PERSON_NAME + " accepted! They are in as your " + POSITION_NAME + ".");
   document.getElementById('accept-btn').href = 'sms:+' + phone + '&body=' + smsBody;
 
-  var vid     = document.getElementById('bg-video');
-  var bgAudio = document.getElementById('bg-audio');
-  var gate    = document.getElementById('tap-gate');
-  var overlay = document.getElementById('overlay');
+  var vid1      = document.getElementById('bg-video');
+  var vid2      = document.getElementById('bg-video2');
+  var audio1    = document.getElementById('bg-audio');
+  var audio2    = document.getElementById('bg-audio2');
+  var gate      = document.getElementById('tap-gate');
+  var tylerMsg  = document.getElementById('tyler-msg');
+  var overlay   = document.getElementById('overlay');
   var acceptBtn = document.getElementById('accept-btn');
 
   function startExperience() {
-    bgAudio.currentTime = 10;
-    var vPlay = vid.play();
-    var aPlay = bgAudio.play();
+    /* Start Black.MOV + Dark Fantasy at 10s */
+    audio1.currentTime = 10;
+    var vPlay = vid1.play();
+    var aPlay = audio1.play();
     if (vPlay) vPlay.catch(function(){});
     if (aPlay) aPlay.catch(function(){});
     gate.style.display = 'none';
+    /* Fade in Tyler's message after 1.2s */
+    setTimeout(function() { tylerMsg.classList.add('visible'); }, 1200);
   }
   gate.addEventListener('click',      startExperience, { once: true });
   gate.addEventListener('touchstart', startExperience, { once: true, passive: true });
 
-  vid.addEventListener('ended', function() {
-    vid.currentTime = vid.duration;
-    vid.pause();
+  /* When Black.MOV ends: crossfade to Flower.MOV + swap audio */
+  vid1.addEventListener('ended', function() {
+    /* Fade out Tyler message */
+    tylerMsg.classList.add('hidden');
+    /* Crossfade video: fade in vid2 over vid1 */
+    vid2.style.opacity = '0';
+    vid2.play().catch(function(){});
+    audio2.currentTime = 10;
+    audio2.play().catch(function(){});
+    /* Fade out audio1 over 1.8s */
+    var fadeStart = Date.now();
+    var fadeDur = 1800;
+    var fadeInterval = setInterval(function() {
+      var elapsed = Date.now() - fadeStart;
+      var vol = Math.max(0, 1 - elapsed / fadeDur);
+      audio1.volume = vol;
+      if (vol <= 0) {
+        clearInterval(fadeInterval);
+        audio1.pause();
+      }
+    }, 50);
+    /* Fade in vid2 */
+    setTimeout(function() { vid2.style.opacity = '1'; }, 50);
+    /* Freeze vid1 on last frame */
+    vid1.currentTime = vid1.duration;
+    vid1.pause();
+  });
+
+  /* When Flower.MOV ends: freeze, show final overlay */
+  vid2.addEventListener('ended', function() {
+    vid2.currentTime = vid2.duration;
+    vid2.pause();
     overlay.classList.add('visible');
   });
 
-  /* Stop audio when accept button is tapped (href still opens SMS naturally) */
+  /* Stop audio when accept button is tapped */
   acceptBtn.addEventListener('click', function() {
-    bgAudio.pause();
-    bgAudio.currentTime = 0;
+    audio2.pause();
+    audio2.currentTime = 0;
   });
   acceptBtn.addEventListener('touchstart', function() {
-    bgAudio.pause();
-    bgAudio.currentTime = 0;
+    audio2.pause();
+    audio2.currentTime = 0;
   }, { passive: true });
 </script>
 </body>
